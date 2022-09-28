@@ -1,5 +1,7 @@
 import java.util.Iterator;
 
+//FIXME Gets stuck in a loop when iterating
+
 /*
  * HashMap class written by the 2022 ADS class
  * 
@@ -7,7 +9,7 @@ import java.util.Iterator;
  * For now, all of our keys will be Strings.
  */
 
-class DSHashMap < V > {
+class DSHashMap < V > implements Iterable <String> {
   // The backing array - contains the values
   DSArrayList < DSArrayList < KVP >> a; // the backing DSArrayList
   int capacity; // Size of the backing array
@@ -160,37 +162,52 @@ class DSHashMap < V > {
   
   public Iterator < String > iterator() {
     return new Iterator < String > () {
-      int index = 0; // current item
+      int index = 0; // current chain
+      int index2 = 0; // current item
+      int hasRemaining = numItems; // remaining KVP
+      
 
       public boolean hasNext() { // if it has another value to return, return true
-        return index < numItems;
+        // System.out.println("GOT HERE #7: " + hasRemaining);
+        return (hasRemaining > 0);
       }
 
       public String next() {
-        String str = "";
-        int index2 = 0;
+        // System.out.println("GOT HERE #2, capacity: " + capacity);
+        // System.out.println("index: " + index);
 
-        for (DSArrayList < KVP > chain: a) {
-          if (chain == null) {} else {
-            for (KVP kvp: chain) {
-              if (kvp == null) {
-                break;
-              } else if (index2 < index) {
-                index2++;
+        // for each index in a starting at the last index
+        for (int j = index; j < capacity; j++) {
+          // System.out.println("GOT HERE #3");
+          //  if the chain is not null
+          if (a.get(index) != null) {
+            // for each index in the current chain, starting at the last index
+            for (int i = index2; i < a.get(index).length(); i++) {
+              // System.out.println("GOT HERE #4");
+              // the current KVP we are looking at
+              KVP currItem = a.get(index).get(index2);
+              // if the KVP is null
+              if (currItem == null) {
+                // System.out.println("GOT HERE #5");
+                // increment index2 and move on
+                index2++; 
               } else {
-                str = kvp.key;
-                index++;
-                return str;
-              }
-              if (index2 > index) {
-                index++;
-                break;
+                // System.out.println("GOT HERE #6");
+                // move the index forward so we don't look at the same key again
+                index2++;
+                // decrease the amount of remaining KVP by 1
+                hasRemaining--;
+                // return the KVP key
+                return currItem.key;
               }
             }
           }
-
+          // when the end of a chain is reached without finding a non null KVP, increment index and look at that chain
+          index++;
+          index2 = 0;
         }
-        return str;
+        System.out.println("SHOULDN'T BE HERE");
+        return "";
       }
     };
   }
